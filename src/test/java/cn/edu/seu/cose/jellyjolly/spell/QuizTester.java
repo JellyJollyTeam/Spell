@@ -97,16 +97,12 @@ public class QuizTester implements QuizVisitor {
     }
 
     public void visit(Quiz quiz) {
-        Assert.fail(String.format("it should be unreachable here: "
-                + "public void visit(Quiz quiz)\n"
-                + "Class: %s",
-                quiz.getClass().getName()));
+        Assert.fail("it should be unreachable here: "
+                + "public void visit(Quiz quiz)");
     }
 
     public void visit(QuizElement quizElement) {
-        Assert.fail(String.format("it should be unreachable here: "
-                + "public void visit(QuizElement quizElement)\n"
-                + "Class: %s",
-                quizElement.getClass().getName()));
+        Assert.fail("it should be unreachable here: "
+                + "public void visit(QuizElement quizElement)");
     }
 }
