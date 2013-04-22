@@ -27,7 +27,7 @@ package cn.edu.seu.cose.jellyjolly.spell;
  *
  * @author rAy <predator.ray@gmail.com>
  */
-public class SingleTextbox extends AbstractQuizElement {
+public class SingleTextbox implements QuizElement {
 
     private String title;
     private String defaultValue;
@@ -46,5 +46,10 @@ public class SingleTextbox extends AbstractQuizElement {
 
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
+    }
+
+    @Override
+    public void accept(QuizVisitor visitor) {
+        visitor.visit(this);
     }
 }

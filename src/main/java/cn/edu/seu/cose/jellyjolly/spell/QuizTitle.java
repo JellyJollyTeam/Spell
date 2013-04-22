@@ -27,7 +27,7 @@ package cn.edu.seu.cose.jellyjolly.spell;
  *
  * @author rAy <predator.ray@gmail.com>
  */
-public class QuizTitle extends AbstractQuizElement {
+public class QuizTitle implements QuizElement {
 
     private String text;
 
@@ -44,5 +44,10 @@ public class QuizTitle extends AbstractQuizElement {
 
     public String getText() {
         return text;
+    }
+
+    @Override
+    public void accept(QuizVisitor visitor) {
+        visitor.visit(this);
     }
 }

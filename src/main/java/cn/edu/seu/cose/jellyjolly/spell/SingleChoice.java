@@ -27,7 +27,7 @@ package cn.edu.seu.cose.jellyjolly.spell;
  *
  * @author rAy <predator.ray@gmail.com>
  */
-public class SingleChoice extends AbstractQuizElement {
+public class SingleChoice implements QuizElement {
 
     private String title;
     private String[] options;
@@ -55,5 +55,10 @@ public class SingleChoice extends AbstractQuizElement {
 
     public void setDefaultIndex(int defaultIndex) {
         this.defaultIndex = defaultIndex;
+    }
+
+    @Override
+    public void accept(QuizVisitor visitor) {
+        visitor.visit(this);
     }
 }

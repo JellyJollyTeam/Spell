@@ -27,7 +27,7 @@ package cn.edu.seu.cose.jellyjolly.spell;
  *
  * @author rAy <predator.ray@gmail.com>
  */
-public class MultipleChoice extends AbstractQuizElement {
+public class MultipleChoice implements QuizElement {
 
     private String title;
     private String[] options;
@@ -55,5 +55,10 @@ public class MultipleChoice extends AbstractQuizElement {
 
     public void setDefaultIndices(int[] defaultIndices) {
         this.defaultIndices = defaultIndices;
+    }
+    
+    @Override
+    public void accept(QuizVisitor visitor) {
+        visitor.visit(this);
     }
 }
