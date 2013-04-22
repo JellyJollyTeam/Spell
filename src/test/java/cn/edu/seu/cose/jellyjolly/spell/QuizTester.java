@@ -31,8 +31,33 @@ import junit.framework.Assert;
  */
 public class QuizTester implements QuizVisitor {
 
-    private final Class<?>[] clzs = {};
-    private final Object[] values = {};
+    private final Class<?>[] clzs = {
+        QuizTitle.class,
+        QuizText.class,
+        SingleChoice.class,
+        MultipleChoice.class,
+        SingleTextbox.class,
+        MultipleTextbox.class,
+        QuizTitle.class,
+        SingleChoice.class,
+        MultipleChoice.class,
+        SingleTextbox.class,
+        MultipleTextbox.class
+    };
+    private final Object[] values = {
+        "Part 1",
+        "This is a comment.",
+        "What's your favorite color?",
+        "What's your hobby?",
+        "What's your name?",
+        "Introduce yourself",
+        "Part 2",
+        "Lorem ipsum dolor sit amet, consectetur adipisicing elit, "
+            + "sed do eiusmod tempor incididun.",
+        "Consectetur adipisicing elit",
+        "Sed ut oersoucuatus unde omnis natus error.",
+        "Sit voluptatem accusanitium doloremque."
+    };
     private int index = 0;
 
     public void visit(QuizTitle quizTitle) {
@@ -42,30 +67,42 @@ public class QuizTester implements QuizVisitor {
     }
 
     public void visit(QuizText quizText) {
+        Assert.assertEquals(QuizText.class, clzs[index]);
+        Assert.assertEquals(quizText.getText(), values[index]);
         ++index;
     }
 
     public void visit(SingleChoice singleChoice) {
+        Assert.assertEquals(SingleChoice.class, clzs[index]);
+        Assert.assertEquals(singleChoice.getTitle(), values[index]);
         ++index;
     }
 
     public void visit(MultipleChoice multipleChoice) {
+        Assert.assertEquals(MultipleChoice.class, clzs[index]);
+        Assert.assertEquals(multipleChoice.getTitle(), values[index]);
         ++index;
     }
 
     public void visit(SingleTextbox singleTextbox) {
+        Assert.assertEquals(SingleTextbox.class, clzs[index]);
+        Assert.assertEquals(singleTextbox.getTitle(), values[index]);
         ++index;
     }
 
     public void visit(MultipleTextbox multipleTextbox) {
+        Assert.assertEquals(MultipleTextbox.class, clzs[index]);
+        Assert.assertEquals(multipleTextbox.getTitle(), values[index]);
         ++index;
     }
 
     public void visit(Quiz quiz) {
-        ++index;
+        Assert.fail("it should be unreachable here: "
+                + "public void visit(Quiz quiz)");
     }
 
     public void visit(QuizElement quizElement) {
-        ++index;
+        Assert.fail("it should be unreachable here: "
+                + "public void visit(QuizElement quizElement)");
     }
 }

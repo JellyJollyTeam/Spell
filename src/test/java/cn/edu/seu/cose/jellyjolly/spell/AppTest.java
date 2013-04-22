@@ -3,7 +3,6 @@ package cn.edu.seu.cose.jellyjolly.spell;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.nio.charset.Charset;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -19,11 +18,8 @@ public class AppTest extends TestCase {
         return new TestSuite(AppTest.class);
     }
 
-    /**
-     * Rigourous Test :-)
-     */
     public void testSpellParser() throws IOException {
-        SpellParser parser = null; // construct the concrete spell parser here
+        SpellParser parser = new MockSpellParser(); // replace with the concrete spell parser here
         String source = getSourceFromClassPath();
         Quiz quiz = parser.getQuiz(source);
         testQuiz(quiz);
