@@ -31,7 +31,7 @@ public class SingleChoice extends AbstractQuizElement {
 
     private String title;
     private String[] options;
-    private int defaultIndex;
+    private int defaultIndex = -1;
 
     public String getTitle() {
         return title;

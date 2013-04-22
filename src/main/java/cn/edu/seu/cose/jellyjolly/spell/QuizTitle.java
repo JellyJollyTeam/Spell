@@ -27,7 +27,7 @@ package cn.edu.seu.cose.jellyjolly.spell;
  *
  * @author rAy <predator.ray@gmail.com>
  */
-public class QuizTitle {
+public class QuizTitle extends AbstractQuizElement {
 
     private String text;
 

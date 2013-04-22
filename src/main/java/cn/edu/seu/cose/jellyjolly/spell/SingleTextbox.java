@@ -27,7 +27,7 @@ package cn.edu.seu.cose.jellyjolly.spell;
  *
  * @author rAy <predator.ray@gmail.com>
  */
-public class SingleTextbox {
+public class SingleTextbox extends AbstractQuizElement {
 
     private String title;
     private String defaultValue;
