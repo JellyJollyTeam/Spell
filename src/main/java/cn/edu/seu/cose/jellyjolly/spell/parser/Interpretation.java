@@ -43,28 +43,35 @@ public class Interpretation {
             tokenList.add(k);
         }
         iterator = tokenList.iterator();
+        System.out.println(tokenList.size()+" tokens created in total");
     }
     private Token scan(){
-        //Description是一种特殊的token，其边界是所有其它token
+        //Description是一种特殊的token，其边界是所有其它token(或\n?)
         //Description最后加以处理，把头尾的空格，\t，（\n？）去除
         if(index>=source.length()){
             return null;
         }
-        int nextloc = locate(nonDescriptionTokenLocater.combine(
-            new Locater(){
-                public boolean pass(char c){
-                    return c!='\n';
-                }
-            }));
-        if(nextloc!=index){
-            String description = 
-                    source.subSequence(index, nextloc-1).toString();
-            index = nextloc;
+        int nextloc;
+        boolean loop = true;
+        do{
+            nextloc = locate(nonDescriptionTokenLocater.combine(
+                    new Locater(){
+                        public boolean pass(char c){
+                            return c!='\n';
+                    }
+                }));
+            String description = source.subSequence(index, nextloc).toString();
             description = description.trim();
+            if(source.charAt(nextloc)=='\n'){
+                index = nextloc+1;
+            } else {
+                index = nextloc;
+                loop = false;
+            }
             if(!description.isEmpty()){
                 return new Description(description);
             }
-        }
+        }while(loop);
         switch(source.charAt(index)){
             case '(':{
                 int i = locate(new Locater(){
@@ -72,12 +79,17 @@ public class Interpretation {
                         return c!=')';
                     }
                 });
-                boolean isDefault = i!=index+1;
+                boolean isDefault = i!=(index+1);
                 index = i;
-                int j = locate(nonDescriptionTokenLocater)-1;
+                int j = locate(nonDescriptionTokenLocater.combine(
+                    new Locater(){
+                        public boolean pass(char c){
+                            return c!='\n';
+                    }
+                }));
                 index = j;
                 return new Option(true,isDefault,
-                        source.subSequence(i, j).toString());
+                        source.subSequence(i+1, j).toString().trim());
             }
             case '[':{
                 int i = locate(new Locater(){
@@ -87,10 +99,15 @@ public class Interpretation {
                 });
                 boolean isDefault = i!=index+1;
                 index = i;
-                int j = locate(nonDescriptionTokenLocater)-1;
+                int j = locate(nonDescriptionTokenLocater.combine(
+                    new Locater(){
+                        public boolean pass(char c){
+                            return c!='\n';
+                    }
+                }));
                 index = j;
                 return new Option(false,isDefault,
-                        source.subSequence(i, j).toString());
+                        source.subSequence(i+1, j).toString().trim());
             }
             case '-':{
                 index = locate(new Locater(){
@@ -107,7 +124,9 @@ public class Interpretation {
                         return c=='_';
                     }
                 });
+                index = i;
                 if(source.charAt(i)=='\n'){
+                    index++;
                     return new TextInput();
                 }
                 int j = locate(new Locater(){
@@ -115,8 +134,9 @@ public class Interpretation {
                         return c!='_'&&c!='\n';
                     }
                 });
+                index = j;
                 if(source.charAt(j)=='\n'){
-                    index = j+1;
+                    index++;
                 } else {
                     index = locate(new Locater(){
                         public boolean pass(char c){
@@ -125,19 +145,22 @@ public class Interpretation {
                     });
                 }
                 return new TextInput(
-                        source.subSequence(i, j-1).toString());
+                        source.subSequence(i, j).toString());
             }
             default:
+                System.out.println("unexpected character");
                 return null;
         }
     }
     private int locate(Locater l){
         int i;
-        for(i=index+1;i<source.length();++i){
+        for(i=index;i<source.length();++i){
             if(l.pass(source.charAt(i))){
                 continue;
             }
+            break;
         }
+        //System.out.println("located position "+i+" where char is "+source.charAt(i));
         return i;
     }
     

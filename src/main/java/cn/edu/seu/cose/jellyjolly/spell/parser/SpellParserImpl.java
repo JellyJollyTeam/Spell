@@ -70,6 +70,7 @@ public class SpellParserImpl implements SpellParser{
     }
     public class TokenParser implements TokenVisitor{
         public void visit(Description description) {
+            //System.out.println("visiting description: "+description.getContent());
             if(tbuffer!=null){
                 quiz.addQuizElement(new QuizText(tbuffer.getContent()));
             }
@@ -77,6 +78,7 @@ public class SpellParserImpl implements SpellParser{
             t = interpretation.getNextToken();
         }
         public void visit(Section section) {
+            //System.out.println("visiting section");
             if(tbuffer!=null){
                 quiz.addQuizElement(new QuizTitle(tbuffer.getContent()));
                 tbuffer = null;
@@ -84,6 +86,7 @@ public class SpellParserImpl implements SpellParser{
             t = interpretation.getNextToken();
         }
         public void visit(Option option) {
+            //System.out.println("visiting option: "+option.getContent());
             if(tbuffer!=null){
                 Option op = (Option)t;
                 if(op.isSingle()){
@@ -91,6 +94,8 @@ public class SpellParserImpl implements SpellParser{
                 } else {
                     constructMultipleChoice(op);
                 }
+            }else{
+                interpretation.getNextToken();
             }
         }
         private void constructSingleChoice(Option op){
@@ -140,13 +145,15 @@ public class SpellParserImpl implements SpellParser{
             quiz.addQuizElement(mc);
         }
         public void visit(TextInput textInput) {
+            //System.out.println("visiting textinput");
             if(tbuffer!=null){
-                TextInput input = (TextInput)t;
                 StringBuilder defaultValue = new StringBuilder();
                 int inputs = 0;
                 do{
                     inputs++;
+                    TextInput input = (TextInput)t;
                     if(input.hasDefaultValue()){
+                        defaultValue.append(" ");
                         defaultValue.append(input.getDefaultValue());
                     }
                     t = interpretation.getNextToken();
@@ -164,6 +171,8 @@ public class SpellParserImpl implements SpellParser{
                     quiz.addQuizElement(mt);
                 }
                 tbuffer = null;
+            }else{
+                interpretation.getNextToken();
             }
         }
     }
