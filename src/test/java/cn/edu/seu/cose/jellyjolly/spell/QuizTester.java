@@ -23,6 +23,7 @@
  */
 package cn.edu.seu.cose.jellyjolly.spell;
 
+import java.util.Hashtable;
 import junit.framework.Assert;
 
 /**
@@ -30,7 +31,6 @@ import junit.framework.Assert;
  * @author rAy <predator.ray@gmail.com>
  */
 public class QuizTester implements QuizVisitor {
-
     private final Class<?>[] clzs = {
         QuizTitle.class,
         QuizText.class,

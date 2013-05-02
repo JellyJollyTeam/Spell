@@ -47,7 +47,7 @@ class MockSpellParser implements SpellParser {
         mc1.setOptions(new String[]{
             "Soccer", "Basketball", "Badminton", "Others"
         });
-        mc1.setDefaultIndices(new int[]{0, 2});
+        mc1.setDefaultIndexes(new Integer[]{0, 2});
         quiz.addQuizElement(mc1);
 
         SingleTextbox st1 = new SingleTextbox();

@@ -1,5 +1,6 @@
 package cn.edu.seu.cose.jellyjolly.spell;
 
+import cn.edu.seu.cose.jellyjolly.spell.parser.SpellParserImpl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +20,7 @@ public class AppTest extends TestCase {
     }
 
     public void testSpellParser() throws IOException {
-        SpellParser parser = new MockSpellParser(); // replace with the concrete spell parser here
+        SpellParser parser = new SpellParserImpl();
         String source = getSourceFromClassPath();
         Quiz quiz = parser.getQuiz(source);
         testQuiz(quiz);

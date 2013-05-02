@@ -31,7 +31,7 @@ public class MultipleChoice implements QuizElement {
 
     private String title;
     private String[] options;
-    private int[] defaultIndices;
+    private Integer[] defaultIndexes;
 
     public String getTitle() {
         return title;
@@ -49,12 +49,11 @@ public class MultipleChoice implements QuizElement {
         this.options = options;
     }
 
-    public int[] getDefaultIndices() {
-        return defaultIndices;
+    public Integer[] getDefaultIndices() {
+        return defaultIndexes;
     }
-
-    public void setDefaultIndices(int[] defaultIndices) {
-        this.defaultIndices = defaultIndices;
+    public void setDefaultIndexes(Integer[] defaultIndexes) {
+        this.defaultIndexes = defaultIndexes;
     }
     
     @Override
