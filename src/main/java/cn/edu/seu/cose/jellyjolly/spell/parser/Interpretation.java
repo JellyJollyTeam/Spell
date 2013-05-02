@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Interpretation {
     private List<Token> tokenList = new ArrayList<Token>();
-    private Iterator<Token> iterator = tokenList.iterator();
+    private Iterator<Token> iterator;
     private int index = 0;
     private CharSequence source;
     public Interpretation(CharSequence s){
@@ -42,6 +42,7 @@ public class Interpretation {
         while((k = scan())!=null){
             tokenList.add(k);
         }
+        iterator = tokenList.iterator();
     }
     private Token scan(){
         //Description是一种特殊的token，其边界是所有其它token
