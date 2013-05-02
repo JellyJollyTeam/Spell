@@ -166,6 +166,13 @@ public class Interpretation {
         return iterator.hasNext() ? iterator.next() : null;
     }
     public abstract class Token{
+        public abstract void accept(TokenVisitor visitor);
+    }
+    public interface TokenVisitor{
+        void visit(Description description);
+        void visit(Section section);
+        void visit(Option option);
+        void visit(TextInput textInput);
     }
     public class Description extends Token{//text, could be one of
         //the three: a part notion, a comment, or a title
@@ -176,8 +183,16 @@ public class Interpretation {
         public String getContent(){
             return content;
         }
+        @Override
+        public void accept(TokenVisitor visitor){
+            visitor.visit(this);
+        }
     }
     public class Section extends Token{//-------------
+        @Override
+        public void accept(TokenVisitor visitor){
+            visitor.visit(this);
+        }
     }
     public class Option extends Token{//(xxx)
         public Option(boolean s,boolean d,String c){
@@ -197,6 +212,10 @@ public class Interpretation {
         public String getContent(){
             return content;
         }
+        @Override
+        public void accept(TokenVisitor visitor){
+            visitor.visit(this);
+        }
     }
     public class TextInput extends Token{//_xxx_
         public TextInput(){
@@ -213,6 +232,10 @@ public class Interpretation {
         }
         public String getDefaultValue(){
             return content;
+        }
+        @Override
+        public void accept(TokenVisitor visitor){
+            visitor.visit(this);
         }
     }
 }
