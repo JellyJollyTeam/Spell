@@ -23,7 +23,6 @@
  */
 package cn.edu.seu.cose.jellyjolly.spell;
 
-import java.util.Hashtable;
 import junit.framework.Assert;
 
 /**
@@ -31,34 +30,20 @@ import junit.framework.Assert;
  * @author rAy <predator.ray@gmail.com>
  */
 public class QuizTester implements QuizVisitor {
-    private final Class<?>[] clzs = {
-        QuizTitle.class,
-        QuizText.class,
-        SingleChoice.class,
-        MultipleChoice.class,
-        SingleTextbox.class,
-        MultipleTextbox.class,
-        QuizTitle.class,
-        SingleChoice.class,
-        MultipleChoice.class,
-        SingleTextbox.class,
-        MultipleTextbox.class
-    };
-    private final Object[] values = {
-        "Part 1",
-        "This is a comment.",
-        "What's your favorite color?",
-        "What's your hobby?",
-        "What's your name?",
-        "Introduce yourself",
-        "Part 2",
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit, "
-            + "sed do eiusmod tempor incididun.",
-        "Consectetur adipisicing elit",
-        "Sed ut oersoucuatus unde omnis natus error.",
-        "Sit voluptatem accusanitium doloremque."
-    };
+
+    private final Class<?>[] clzs;
+    private final Object[] values;
     private int index = 0;
+    private final int length;
+
+    public QuizTester(Class<?>[] clzs, Object[] values) {
+        if (clzs == null || values == null || clzs.length != values.length) {
+            throw new IllegalArgumentException();
+        }
+        this.clzs = clzs;
+        this.values = values;
+        this.length = clzs.length;
+    }
 
     public void visit(QuizTitle quizTitle) {
         Assert.assertEquals(QuizTitle.class, clzs[index]);
@@ -104,5 +89,9 @@ public class QuizTester implements QuizVisitor {
     public void visit(QuizElement quizElement) {
         Assert.fail("it should be unreachable here: "
                 + "public void visit(QuizElement quizElement)");
+    }
+
+    public void finish() {
+        Assert.assertEquals(length, index);
     }
 }
