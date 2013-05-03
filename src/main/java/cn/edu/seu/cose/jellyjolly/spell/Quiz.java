@@ -46,7 +46,7 @@ public class Quiz implements QuizElement, Iterable<QuizElement> {
 
     public void addQuizElement(QuizElement quizElement) {
         quizElements.add(quizElement);
-        System.out.println("added quiz element");
+        System.out.println("added quiz element "+ quizElement.getClass());
     }
 
     @Override
