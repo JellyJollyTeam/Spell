@@ -55,10 +55,19 @@ public class SpellParserImpl implements SpellParser{
         QuizElement qe;
         peek = interpretation.getNextToken();
         while(peek!=null){
+            /*
+            System.out.println(peek.tag);
+            if(peek.tag==Tag.TEXT){
+                System.out.println("text: "+((TextToken)peek).content);
+            }
+            peek = interpretation.getNextToken();
+            * */
+            
             qe = parse(parsingTree.root,null,peek);
             if(qe!=null){
                 quiz.addQuizElement(qe);
             }
+            
         }
         return quiz;
     }
@@ -211,11 +220,7 @@ public class SpellParserImpl implements SpellParser{
             choice_OPTION.contextFn = new ContextFn(){
                 public boolean visit(ParsingContext context,Token token) {
                     OptionToken ot = (OptionToken)token;
-                    if(context.isSingle!=null){
-                        if(context.isSingle != ot.isSingle){
-                            return false;
-                        }
-                    } else {
+                    if(context.isSingle==null){
                         context.isSingle = ot.isSingle;
                     }
                     if(ot.isDefault){
