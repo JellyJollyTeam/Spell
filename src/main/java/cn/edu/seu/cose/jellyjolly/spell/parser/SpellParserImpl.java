@@ -62,6 +62,7 @@ public class SpellParserImpl implements SpellParser{
         }
         return quiz;
     }
+    //parse利用ParsingTree解析Token，生成中间表示
     public QuizElement parse(TagNode node, Token current, Token next){
         if(node!=null)
             System.out.println("\n\nparsing node "+node.tag);
@@ -203,6 +204,7 @@ public class SpellParserImpl implements SpellParser{
             choice_OPTION.addChild(choice_TEXT);
             choice_TEXT.addChild(choice_NEWLINE);
             choice_NEWLINE.addChild(choice_OPTION);
+            choice_NEWLINE.addChild(choice_TEXT);
             
             choice_OPTION.contextFn = new ContextFn(){
                 public boolean visit(ParsingContext context,Token token) {
@@ -217,6 +219,7 @@ public class SpellParserImpl implements SpellParser{
                     if(ot.isDefault){
                         context.defaultIndexes.add(context.options.size()-1);
                     }
+                    context.options.add("");
                     return true;
                 }
             };
@@ -242,11 +245,16 @@ public class SpellParserImpl implements SpellParser{
             };
             choice_TEXT.contextFn = new ContextFn(){
                 public boolean visit(ParsingContext context,Token token) {
-                    context.options.add(((TextToken)token).content);
+                    String s = context.options.get(context.options.size()-1);
+                    if(s.equals("")){
+                        s += " ";
+                    }
+                    s += ((TextToken)token).content;
                     return true;
                 }
             };
-            choice_NEWLINE.failureFn = choice_OPTION.failureFn;
+            choice_NEWLINE.failureFn = 
+                    choice_TEXT.failureFn = choice_OPTION.failureFn;
             /////////////////////////////////////////////////////////
             //构造INDEX-TEXT-NEWLINE主干
             TagNode question_INDEX = new TagNode(Tag.INDEX);
