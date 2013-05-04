@@ -2,10 +2,16 @@
 This is a comment.
 
 1. What's your favorite color?
-(x) Red [] Yellow () Blue () Green
+(x) Red
+[] Yellow
+() Blue
+() Green
 
 2. What's your hobby?
-[x] Soccer () Basketball [x] Badminton [] Others
+[x] Soccer
+() Basketball
+[x] Badminton
+[] Others
 
 3. What's your name?
 ___ _____
@@ -19,10 +25,16 @@ Part 2
 
 1. Lorem ipsum dolor sit amet, consectetur adipisicing elit,
    sed do eiusmod tempor incididun.
-() Lorem () Ipsum () Dolor () Sit
+() Lorem
+() Ipsum
+() Dolor
+() Sit
 
 2. Consectetur adipisicing elit
-[] Lorem [] Ipsum [] Dolor [] Sit
+[] Lorem
+[] Ipsum
+[] Dolor
+[] Sit
 
 3. Sed ut oersoucuatus unde omnis natus error.
 _____lorem ipsum______

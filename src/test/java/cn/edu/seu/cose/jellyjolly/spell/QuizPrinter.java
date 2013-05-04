@@ -41,7 +41,7 @@ public class QuizPrinter implements QuizVisitor {
         out.println(multipleChoice.getTitle());
         out.println("options:");
         for (String options : multipleChoice.getOptions()) {
-            out.print(options);
+            out.println(options);
         }
         out.println("default:");
         for (int index : multipleChoice.getDefaultIndices()) {

@@ -45,7 +45,7 @@ import java.util.List;
  */
 public class SpellParserImpl implements SpellParser{
     private Quiz quiz = new Quiz();
-    Token t = null;
+    Token peek = null;
     Interpretation interpretation = null;
     ParsingTree parsingTree = new ParsingTree();
     /*
@@ -53,9 +53,9 @@ public class SpellParserImpl implements SpellParser{
     public Quiz getQuiz(CharSequence charSequence) {
         interpretation = new Interpretation(charSequence);
         QuizElement qe;
-        t = interpretation.getNextToken();
-        while(t!=null){
-            qe = parse(parsingTree.root,null,t);
+        peek = interpretation.getNextToken();
+        while(peek!=null){
+            qe = parse(parsingTree.root,null,peek);
             if(qe!=null){
                 quiz.addQuizElement(qe);
             }
@@ -74,11 +74,13 @@ public class SpellParserImpl implements SpellParser{
         }
         if(next!=null)
             System.out.println("next token "+next.tag);
-        if(next==null){
-            t = null;
+        /////////////////////////////////////////////////////////
+        if(!node.contextFn.visit(parsingTree.context, current)){
+            peek = next;
             return node.failureFn.fail(parsingTree.context);
         }
-        if(!node.contextFn.visit(parsingTree.context, current)){
+        if(next==null){
+            peek = null;
             return node.failureFn.fail(parsingTree.context);
         }
         System.out.println("visit finished");
@@ -88,9 +90,9 @@ public class SpellParserImpl implements SpellParser{
             }
         }
         System.out.println("node "+node.tag+" failed");
-        t = next;
+        peek = next;
         if(node.tag == null){//若失败发生在根节点上
-            t = interpretation.getNextToken();
+            peek = interpretation.getNextToken();
         }
         return node.failureFn.fail(parsingTree.context);
     }
@@ -217,7 +219,7 @@ public class SpellParserImpl implements SpellParser{
                         context.isSingle = ot.isSingle;
                     }
                     if(ot.isDefault){
-                        context.defaultIndexes.add(context.options.size()-1);
+                        context.defaultIndexes.add(context.options.size());
                     }
                     context.options.add("");
                     return true;
@@ -246,10 +248,11 @@ public class SpellParserImpl implements SpellParser{
             choice_TEXT.contextFn = new ContextFn(){
                 public boolean visit(ParsingContext context,Token token) {
                     String s = context.options.get(context.options.size()-1);
-                    if(s.equals("")){
+                    if(!s.equals("")){
                         s += " ";
                     }
                     s += ((TextToken)token).content;
+                    context.options.set(context.options.size()-1, s);
                     return true;
                 }
             };
@@ -318,8 +321,8 @@ public class SpellParserImpl implements SpellParser{
             if(tbuffer!=null){
                 quiz.addQuizElement(new QuizText(tbuffer.getContent()));
             }
-            tbuffer = (Description)t;
-            t = interpretation.getNextToken();
+            tbuffer = (Description)peek;
+            peek = interpretation.getNextToken();
         }
         public void visit(Section section) {
             //System.out.println("visiting section");
@@ -327,12 +330,12 @@ public class SpellParserImpl implements SpellParser{
                 quiz.addQuizElement(new QuizTitle(tbuffer.getContent()));
                 tbuffer = null;
             }
-            t = interpretation.getNextToken();
+            peek = interpretation.getNextToken();
         }
         public void visit(Option option) {
             //System.out.println("visiting option: "+option.getContent());
             if(tbuffer!=null){
-                Option op = (Option)t;
+                Option op = (Option)peek;
                 if(op.isSingle()){
                     constructSingleChoice(op);
                 } else {
@@ -353,10 +356,10 @@ public class SpellParserImpl implements SpellParser{
                 if(op.isDefault()){
                     defaultIndex = options.size()-1;
                 }
-                t = interpretation.getNextToken();
-                if(t==null)break;
-                if(!t.getClass().equals(Option.class))break;
-                op = (Option)t;
+                peek = interpretation.getNextToken();
+                if(peek==null)break;
+                if(!peek.getClass().equals(Option.class))break;
+                op = (Option)peek;
                 if(!op.isSingle())break;
             }while(true);
 
@@ -377,10 +380,10 @@ public class SpellParserImpl implements SpellParser{
                 if(op.isDefault()){
                     defaultIndexes.add(options.size()-1);
                 }
-                t = interpretation.getNextToken();
-                if(t==null)break;
-                if(!t.getClass().equals(Option.class))break;
-                op = (Option)t;
+                peek = interpretation.getNextToken();
+                if(peek==null)break;
+                if(!peek.getClass().equals(Option.class))break;
+                op = (Option)peek;
                 if(op.isSingle())break;
             }while(true);
 
@@ -395,13 +398,13 @@ public class SpellParserImpl implements SpellParser{
                 int inputs = 0;
                 do{
                     inputs++;
-                    TextInput input = (TextInput)t;
+                    TextInput input = (TextInput)peek;
                     if(input.hasDefaultValue()){
                         defaultValue.append(" ");
                         defaultValue.append(input.getDefaultValue());
                     }
-                    t = interpretation.getNextToken();
-                }while(t!=null&&t.getClass().equals(TextInput.class));
+                    peek = interpretation.getNextToken();
+                }while(peek!=null&&peek.getClass().equals(TextInput.class));
 
                 if(inputs==1){
                     SingleTextbox st = new SingleTextbox();
