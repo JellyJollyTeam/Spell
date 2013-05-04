@@ -43,7 +43,7 @@ public class Interpretation {
             tokenList.add(k);
         }
         iterator = tokenList.iterator();
-        System.out.println(tokenList.size()+" tokens created in total");
+        //System.out.println(tokenList.size()+" tokens created in total");
     }
     private Token scan(){
         //Description是一种特殊的token，其边界是所有其它token(或\n?)
@@ -148,7 +148,7 @@ public class Interpretation {
                         source.subSequence(i, j).toString());
             }
             default:
-                System.out.println("unexpected character");
+                //System.out.println("unexpected character");
                 return null;
         }
     }
