@@ -43,113 +43,126 @@ public class Interpretation {
             tokenList.add(k);
         }
         iterator = tokenList.iterator();
-        //System.out.println(tokenList.size()+" tokens created in total");
+        System.out.println(tokenList.size()+" tokens created");
+    }
+    public Token getNextToken(){
+        return iterator.hasNext() ? iterator.next() : null;
     }
     private Token scan(){
-        //Description是一种特殊的token，其边界是所有其它token(或\n?)
-        //Description最后加以处理，把头尾的空格，\t，（\n？）去除
         if(index>=source.length()){
             return null;
         }
-        int nextloc;
-        boolean loop = true;
+        char peek;
+        //忽略token之间的空字符
         do{
-            nextloc = locate(nonDescriptionTokenLocater.combine(
-                    new Locater(){
-                        public boolean pass(char c){
-                            return c!='\n';
-                    }
-                }));
-            String description = source.subSequence(index, nextloc).toString();
-            description = description.trim();
-            if(source.charAt(nextloc)=='\n'){
-                index = nextloc+1;
-            } else {
-                index = nextloc;
-                loop = false;
-            }
-            if(!description.isEmpty()){
-                return new Description(description);
-            }
-        }while(loop);
-        switch(source.charAt(index)){
+            peek = source.charAt(index++);
+        }while(peek==' '||peek=='\t');
+        
+        switch(peek){
+            case '\n':
+                return new NewlineToken();
+            case '-':
+                index = locate(new Locater(){
+                            public boolean pass(char c){
+                                return c=='-';
+                            }
+                        });
+                return new SectionToken();
             case '(':{
-                int i = locate(new Locater(){
+                int rightBorder = locate(new Locater(){
                     public boolean pass(char c){
-                        return c!=')';
+                        return c!=')'&&c!='\n';
                     }
                 });
-                boolean isDefault = i!=(index+1);
-                index = i;
-                int j = locate(nonDescriptionTokenLocater.combine(
-                    new Locater(){
-                        public boolean pass(char c){
-                            return c!='\n';
-                    }
-                }));
-                index = j;
-                return new Option(true,isDefault,
-                        source.subSequence(i+1, j).toString().trim());
+                if(source.charAt(rightBorder)==')'){
+                    boolean isDefault = index!=rightBorder;
+                    index = rightBorder + 1;
+                    return new OptionToken(true,isDefault);
+                }
             }
             case '[':{
-                int i = locate(new Locater(){
+                int rightBorder = locate(new Locater(){
                     public boolean pass(char c){
-                        return c!=']';
+                        return c!=']'&&c!='\n';
                     }
                 });
-                boolean isDefault = i!=index+1;
-                index = i;
-                int j = locate(nonDescriptionTokenLocater.combine(
-                    new Locater(){
-                        public boolean pass(char c){
-                            return c!='\n';
-                    }
-                }));
-                index = j;
-                return new Option(false,isDefault,
-                        source.subSequence(i+1, j).toString().trim());
+                if(source.charAt(rightBorder)==']'){
+                    boolean isDefault = index!=rightBorder;
+                    index = rightBorder + 1;
+                    return new OptionToken(false,isDefault);
+                }
             }
-            case '-':{
+            case '_':
                 index = locate(new Locater(){
-                    public boolean pass(char c){
-                        return c=='-';
-                    }
-                });
-                return new Section();
-            }
-            case '_':{
-                //换行符在这里有效，充当后边界
-                int i = locate(new Locater(){
-                    public boolean pass(char c){
-                        return c=='_';
-                    }
-                });
-                index = i;
-                if(source.charAt(i)=='\n'){
-                    index++;
-                    return new TextInput();
+                            public boolean pass(char c){
+                                return c=='_';
+                            }
+                        });
+                return new InputToken();
+        }
+        //IndexToken，由数字+'.'组成
+        if(Character.isDigit(peek)){
+            int l = locate(new Locater(){
+                public boolean pass(char c){
+                    return Character.isDigit(c);
                 }
-                int j = locate(new Locater(){
-                    public boolean pass(char c){
-                        return c!='_'&&c!='\n';
-                    }
-                });
-                index = j;
-                if(source.charAt(j)=='\n'){
-                    index++;
-                } else {
-                    index = locate(new Locater(){
-                        public boolean pass(char c){
-                            return c=='_';
-                        }
-                    });
-                }
-                return new TextInput(
-                        source.subSequence(i, j).toString());
+            });
+            if(source.charAt(l)=='.'){
+                index = l+1;
+                return new IndexToken();
             }
-            default:
-                //System.out.println("unexpected character");
-                return null;
+        }
+        //构造TextToken，止于换行符
+        int l = locate(new Locater(){
+            public boolean pass(char c){
+                return c!='\n';
+            }
+        });
+        String text = source.subSequence(index-1, l).toString();
+        text = text.trim();
+        index = l;
+        return new TextToken(text);
+    }
+    public static abstract class Token{
+        public static enum Tag{
+            OPTION, TEXT, SECTION, INDEX, INPUT, NEWLINE
+        }
+        public Tag tag;
+    }
+    public static class OptionToken extends Token{
+        public boolean isDefault;
+        public boolean isSingle;
+        public OptionToken(boolean sin,boolean def){
+            tag = Tag.OPTION;
+            isDefault = def;
+            isSingle = sin;
+        }
+    }
+    public static class TextToken extends Token{
+        public String content;
+        public TextToken(String s){
+            tag = Tag.TEXT;
+            content = s;
+        }
+    }
+    public static class SectionToken extends Token{
+        public SectionToken(){
+            tag = Tag.SECTION;
+        }
+    }
+    public static class IndexToken extends Token{
+        public IndexToken(){
+            tag = Tag.INDEX;
+        }
+    }
+    public static class InputToken extends Token{
+        public InputToken(){
+            tag = Tag.INPUT;
+        }
+    }
+    public static class NewlineToken extends Token{
+        public NewlineToken(){
+            tag = Tag.NEWLINE;
         }
     }
     private int locate(Locater l){
@@ -160,14 +173,12 @@ public class Interpretation {
             }
             break;
         }
-        //System.out.println("located position "+i+" where char is "+source.charAt(i));
         return i;
     }
-    
     private interface Locater{
         boolean pass(char c);
     }
-    
+    /*
     private class NonDescriptionTokenLocater implements Locater{
         NonDescriptionTokenLocater self = this;
         public boolean pass(char c){
@@ -185,18 +196,7 @@ public class Interpretation {
             = new NonDescriptionTokenLocater();
     
     
-    public Token getNextToken(){
-        return iterator.hasNext() ? iterator.next() : null;
-    }
-    public abstract class Token{
-        public abstract void accept(TokenVisitor visitor);
-    }
-    public interface TokenVisitor{
-        void visit(Description description);
-        void visit(Section section);
-        void visit(Option option);
-        void visit(TextInput textInput);
-    }
+    
     public class Description extends Token{//text, could be one of
         //the three: a part notion, a comment, or a title
         public Description(String c){
@@ -261,4 +261,5 @@ public class Interpretation {
             visitor.visit(this);
         }
     }
+    */
 }

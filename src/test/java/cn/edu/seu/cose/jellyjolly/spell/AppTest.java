@@ -51,14 +51,14 @@ public class AppTest extends TestCase {
     }
 
     public void testPrintCase1() throws IOException {
-        
+        /*
         System.out.println("testPrintCase1");
         SpellParser parser = new SpellParserImpl();
         String source = getSourceFromClassPath(SAMPLE_PATH);
         Quiz quiz = parser.getQuiz(source);
         QuizVisitor quizVisitor = new QuizPrinter();
         quiz.accept(quizVisitor);
-        
+        */
     }
 
     public void testSpellParser() throws IOException {
