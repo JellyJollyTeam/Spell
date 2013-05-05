@@ -55,14 +55,6 @@ public class SpellParserImpl implements SpellParser{
         QuizElement qe;
         peek = interpretation.getNextToken();
         while(peek!=null){
-            /*
-            System.out.println(peek.tag);
-            if(peek.tag==Tag.TEXT){
-                System.out.println("text: "+((TextToken)peek).content);
-            }
-            peek = interpretation.getNextToken();
-            * */
-            
             qe = parse(parsingTree.root,null,peek);
             if(qe!=null){
                 quiz.addQuizElement(qe);
@@ -73,16 +65,6 @@ public class SpellParserImpl implements SpellParser{
     }
     //parse利用ParsingTree解析Token，生成中间表示
     public QuizElement parse(TagNode node, Token current, Token next){
-        if(node!=null)
-            System.out.println("\n\nparsing node "+node.tag);
-        if(current!=null){
-            System.out.println("current token "+current.tag);
-            if(current.tag == Tag.TEXT){
-                System.out.println("with text: " + ((TextToken)current).content);
-            }
-        }
-        if(next!=null)
-            System.out.println("next token "+next.tag);
         /////////////////////////////////////////////////////////
         if(!node.contextFn.visit(parsingTree.context, current)){
             peek = next;
@@ -92,13 +74,11 @@ public class SpellParserImpl implements SpellParser{
             peek = null;
             return node.failureFn.fail(parsingTree.context);
         }
-        System.out.println("visit finished");
         for(TagNode child : node.children){
             if(child.tag == next.tag){
                 return parse(child, next, interpretation.getNextToken());
             }
         }
-        System.out.println("node "+node.tag+" failed");
         peek = next;
         if(node.tag == null){//若失败发生在根节点上
             peek = interpretation.getNextToken();
@@ -319,114 +299,4 @@ public class SpellParserImpl implements SpellParser{
             //////////////////////////////////////////////////////////////////
         }
     }
-    /*
-    public class TokenParser implements TokenVisitor{
-        public void visit(Description description) {
-            //System.out.println("visiting description: "+description.getContent());
-            if(tbuffer!=null){
-                quiz.addQuizElement(new QuizText(tbuffer.getContent()));
-            }
-            tbuffer = (Description)peek;
-            peek = interpretation.getNextToken();
-        }
-        public void visit(Section section) {
-            //System.out.println("visiting section");
-            if(tbuffer!=null){
-                quiz.addQuizElement(new QuizTitle(tbuffer.getContent()));
-                tbuffer = null;
-            }
-            peek = interpretation.getNextToken();
-        }
-        public void visit(Option option) {
-            //System.out.println("visiting option: "+option.getContent());
-            if(tbuffer!=null){
-                Option op = (Option)peek;
-                if(op.isSingle()){
-                    constructSingleChoice(op);
-                } else {
-                    constructMultipleChoice(op);
-                }
-            }else{
-                interpretation.getNextToken();
-            }
-        }
-        private void constructSingleChoice(Option op){
-            SingleChoice sc = new SingleChoice();
-            sc.setTitle(tbuffer.getContent());
-            tbuffer = null;
-            List<String> options = new ArrayList<String>();
-            int defaultIndex = -1;
-            do{
-                options.add(op.getContent());
-                if(op.isDefault()){
-                    defaultIndex = options.size()-1;
-                }
-                peek = interpretation.getNextToken();
-                if(peek==null)break;
-                if(!peek.getClass().equals(Option.class))break;
-                op = (Option)peek;
-                if(!op.isSingle())break;
-            }while(true);
-
-            sc.setOptions(options.toArray(new String[0]));
-            if(defaultIndex>=0){
-                sc.setDefaultIndex(defaultIndex);
-            }
-            quiz.addQuizElement(sc);
-        }
-        private void constructMultipleChoice(Option op){
-            MultipleChoice mc = new MultipleChoice();
-            mc.setTitle(tbuffer.getContent());
-            tbuffer = null;
-            List<String> options = new ArrayList<String>();
-            List<Integer> defaultIndexes = new ArrayList<Integer>();
-            do{
-                options.add(op.getContent());
-                if(op.isDefault()){
-                    defaultIndexes.add(options.size()-1);
-                }
-                peek = interpretation.getNextToken();
-                if(peek==null)break;
-                if(!peek.getClass().equals(Option.class))break;
-                op = (Option)peek;
-                if(op.isSingle())break;
-            }while(true);
-
-            mc.setOptions(options.toArray(new String[0]));
-            mc.setDefaultIndexes(defaultIndexes.toArray(new Integer[0]));
-            quiz.addQuizElement(mc);
-        }
-        public void visit(TextInput textInput) {
-            //System.out.println("visiting textinput");
-            if(tbuffer!=null){
-                StringBuilder defaultValue = new StringBuilder();
-                int inputs = 0;
-                do{
-                    inputs++;
-                    TextInput input = (TextInput)peek;
-                    if(input.hasDefaultValue()){
-                        defaultValue.append(" ");
-                        defaultValue.append(input.getDefaultValue());
-                    }
-                    peek = interpretation.getNextToken();
-                }while(peek!=null&&peek.getClass().equals(TextInput.class));
-
-                if(inputs==1){
-                    SingleTextbox st = new SingleTextbox();
-                    st.setTitle(tbuffer.getContent());
-                    st.setDefaultValue(defaultValue.toString());
-                    quiz.addQuizElement(st);
-                }else{
-                    MultipleTextbox mt = new MultipleTextbox();
-                    mt.setTitle(tbuffer.getContent());
-                    mt.setDefaultValue(defaultValue.toString());
-                    quiz.addQuizElement(mt);
-                }
-                tbuffer = null;
-            }else{
-                interpretation.getNextToken();
-            }
-        }
-    }
-    */
 }
