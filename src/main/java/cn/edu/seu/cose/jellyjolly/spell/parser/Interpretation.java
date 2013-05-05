@@ -199,8 +199,10 @@ public class Interpretation {
                 }
             });
             if(source.charAt(l)=='.'){
+                Token it = new IndexToken();
+                it.lexeme = source.subSequence(index-1, l+1).toString();
                 index = l+1;
-                return new IndexToken();
+                return it;
             }
         }
         return null;
@@ -225,6 +227,7 @@ public class Interpretation {
             OPTION, TEXT, SECTION, INDEX, INPUT, NEWLINE
         }
         public Tag tag;
+        public String lexeme = "";
     }
     public static class OptionToken extends Token{
         public boolean isDefault;
@@ -236,10 +239,9 @@ public class Interpretation {
         }
     }
     public static class TextToken extends Token{
-        public String content;
         public TextToken(String s){
             tag = Tag.TEXT;
-            content = s;
+            lexeme = s;
         }
     }
     public static class SectionToken extends Token{
@@ -260,6 +262,7 @@ public class Interpretation {
     public static class NewlineToken extends Token{
         public NewlineToken(){
             tag = Tag.NEWLINE;
+            lexeme = " ";
         }
     }
     private int locate(Locater l){
@@ -275,88 +278,4 @@ public class Interpretation {
     private interface Locater{
         boolean pass(char c);
     }
-    /*
-    private class NonDescriptionTokenLocater implements Locater{
-        NonDescriptionTokenLocater self = this;
-        public boolean pass(char c){
-            return c!='('&&c!='['&&c!='_'&&c!='-';
-        }
-        public Locater combine(final Locater l){
-            return new Locater(){
-                public boolean pass(char c){
-                    return self.pass(c)&&l.pass(c);
-                }
-            };
-        }
-    }
-    NonDescriptionTokenLocater nonDescriptionTokenLocater 
-            = new NonDescriptionTokenLocater();
-    
-    
-    
-    public class Description extends Token{//text, could be one of
-        //the three: a part notion, a comment, or a title
-        public Description(String c){
-            content = c;
-        }
-        private String content;
-        public String getContent(){
-            return content;
-        }
-        @Override
-        public void accept(TokenVisitor visitor){
-            visitor.visit(this);
-        }
-    }
-    public class Section extends Token{//-------------
-        @Override
-        public void accept(TokenVisitor visitor){
-            visitor.visit(this);
-        }
-    }
-    public class Option extends Token{//(xxx)
-        public Option(boolean s,boolean d,String c){
-            isSingle = s;
-            isDefault = d;
-            content = c;
-        }
-        private String content;
-        private boolean isSingle;
-        private boolean isDefault;
-        public boolean isSingle(){
-            return isSingle;
-        }
-        public boolean isDefault(){
-            return isDefault;
-        }
-        public String getContent(){
-            return content;
-        }
-        @Override
-        public void accept(TokenVisitor visitor){
-            visitor.visit(this);
-        }
-    }
-    public class TextInput extends Token{//_xxx_
-        public TextInput(){
-            hasDefaultValue = false;
-        }
-        public TextInput(String c){
-            hasDefaultValue = true;
-            content = c;
-        }
-        private boolean hasDefaultValue;
-        private String content;
-        public boolean hasDefaultValue(){
-            return hasDefaultValue;
-        }
-        public String getDefaultValue(){
-            return content;
-        }
-        @Override
-        public void accept(TokenVisitor visitor){
-            visitor.visit(this);
-        }
-    }
-    */
 }
