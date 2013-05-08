@@ -1,6 +1,13 @@
 --------------------
 This is a comment.
 
+```javascript
+    var ihubo = {
+        nickName : "草依山",
+        site : "http://jser.me"
+    }
+```
+---------------
 1. What's your favorite color?
 (x) Red
 [] Yellow

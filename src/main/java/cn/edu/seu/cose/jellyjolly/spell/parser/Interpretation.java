@@ -198,8 +198,10 @@ public class Interpretation {
                 }
             });
             if(source.charAt(l)=='.'){
+                Token it = new IndexToken();
+                it.lexeme = source.subSequence(index-1, l+1).toString();
                 index = l+1;
-                return new IndexToken();
+                return it;
             }
         }
         return null;
@@ -224,6 +226,7 @@ public class Interpretation {
             OPTION, TEXT, SECTION, INDEX, INPUT, NEWLINE
         }
         public Tag tag;
+        public String lexeme = "";
     }
     public static class OptionToken extends Token{
         public boolean isDefault;
@@ -235,10 +238,9 @@ public class Interpretation {
         }
     }
     public static class TextToken extends Token{
-        public String content;
         public TextToken(String s){
             tag = Tag.TEXT;
-            content = s;
+            lexeme = s;
         }
     }
     public static class SectionToken extends Token{
@@ -259,6 +261,7 @@ public class Interpretation {
     public static class NewlineToken extends Token{
         public NewlineToken(){
             tag = Tag.NEWLINE;
+            lexeme = " ";
         }
     }
     private int locate(Locater l){

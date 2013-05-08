@@ -55,35 +55,68 @@ public class SpellParserImpl implements SpellParser{
         QuizElement qe;
         peek = interpretation.getNextToken();
         while(peek!=null){
+            /*
+            System.out.println(peek.tag);
+            if(peek.tag==Tag.TEXT){
+                System.out.println("text: "+((TextToken)peek).lexeme);
+            }
+            peek = interpretation.getNextToken();
+            * */
             qe = parse(parsingTree.root,null,peek);
             if(qe!=null){
                 quiz.addQuizElement(qe);
             }
-            
         }
         return quiz;
     }
     //parse利用ParsingTree解析Token，生成中间表示
+    //对于能够识别的Token组合，返回对应的QuizElement中间表示
+    //不能解析的Token则返回其原有字符串构成的QuizText对象
+    
+    //每个Token都有一个lexeme，是它原来的字符表示
+    //解析过程中Token的lexeme被保存到parsingContext中，
+    //调用各节点failure函数时，如果满足构造条件就返回对应的QuizElement对象
+    //如果不满足构造条件，返回null
+    //此时parse函数就使用parsingContext中的数据构造QuizText作为返回值
     public QuizElement parse(TagNode node, Token current, Token next){
-        /////////////////////////////////////////////////////////
-        if(!node.contextFn.visit(parsingTree.context, current)){
-            peek = next;
-            return node.failureFn.fail(parsingTree.context);
-        }
-        if(next==null){
-            peek = null;
-            return node.failureFn.fail(parsingTree.context);
-        }
-        for(TagNode child : node.children){
-            if(child.tag == next.tag){
-                return parse(child, next, interpretation.getNextToken());
+        if(node!=null)
+            System.out.println("\n\nparsing node "+node.tag);
+        if(current!=null){
+            System.out.println("current token "+current.tag);
+            if(current.tag == Tag.TEXT){
+                System.out.println("with text: " + ((TextToken)current).lexeme);
             }
         }
-        peek = next;
-        if(node.tag == null){//若失败发生在根节点上
-            peek = interpretation.getNextToken();
+        if(next!=null)
+            System.out.println("next token "+next.tag);
+        /////////////////////////////////////////////////////////
+        if(current!=null){
+            parsingTree.context.lexeme.append(current.lexeme);
         }
-        return node.failureFn.fail(parsingTree.context);
+        node.contextFn.visit(parsingTree.context, current);
+        System.out.println("visit finished");
+        if(next!=null){
+            for(TagNode child : node.children){
+                if(child.tag == next.tag){
+                    return parse(child, next, interpretation.getNextToken());
+                }
+            }
+        }
+        System.out.println("node "+node.tag+" failed");
+        
+        peek = next;
+        if(node.tag==null){//失败发生在根节点，就有跳过Token的特殊情况发生
+            peek = interpretation.getNextToken();
+            parsingTree.context.lexeme.append(next.lexeme);
+        }
+        QuizElement ret = node.failureFn.fail(parsingTree.context);
+        if(ret==null){
+            String s = parsingTree.context.lexeme.toString().trim();
+            if(!s.equals("")){
+                ret = new QuizText(s);
+            }
+        }
+        return ret;
     }
     public interface FailureFn{
         QuizElement fail(ParsingContext context);
@@ -114,7 +147,9 @@ public class SpellParserImpl implements SpellParser{
         };
     }
     public class ParsingContext{
-        //QuizText
+        //Lexeme
+        StringBuilder lexeme = new StringBuilder();
+        //TEXT
         TextToken tBuffer;
         //SingleChoice/MultipleChoice
         Boolean isSingle = null;
@@ -125,6 +160,7 @@ public class SpellParserImpl implements SpellParser{
         StringBuilder defaultValue = new StringBuilder();
         
         public void clearAll(){
+            lexeme.delete(0,lexeme.length());
             tBuffer = null;
             isSingle = null;
             options.clear();
@@ -157,7 +193,8 @@ public class SpellParserImpl implements SpellParser{
             };
             textBox_TEXT.contextFn = new ContextFn(){
                 public boolean visit(ParsingContext context,Token token) {
-                    StringBuilder dv = new StringBuilder(((TextToken)token).content);
+                    StringBuilder dv = new StringBuilder(
+                            ((TextToken)token).lexeme);
                     while(dv.charAt(dv.length()-1)=='_'){
                         dv.deleteCharAt(dv.length()-1);
                     }
@@ -172,12 +209,12 @@ public class SpellParserImpl implements SpellParser{
                 public QuizElement fail(ParsingContext context) {
                     if(context.inputs>1){
                         MultipleTextbox mt = new MultipleTextbox();
-                        mt.setTitle(context.tBuffer.content);
+                        mt.setTitle(context.tBuffer.lexeme);
                         mt.setDefaultValue(context.defaultValue.toString());
                         return mt;
                     } else {
                         SingleTextbox st = new SingleTextbox();
-                        st.setTitle(context.tBuffer.content);
+                        st.setTitle(context.tBuffer.lexeme);
                         st.setDefaultValue(context.defaultValue.toString());
                         return st;
                     }
@@ -214,7 +251,7 @@ public class SpellParserImpl implements SpellParser{
                 public QuizElement fail(ParsingContext context){
                     if(context.isSingle){
                         SingleChoice sc = new SingleChoice();
-                        sc.setTitle(context.tBuffer.content);
+                        sc.setTitle(context.tBuffer.lexeme);
                         sc.setOptions(context.options.toArray(new String[0]));
                         if(context.defaultIndexes.size()>0){
                             sc.setDefaultIndex(context.defaultIndexes.get(0));
@@ -222,7 +259,7 @@ public class SpellParserImpl implements SpellParser{
                         return sc;
                     } else {
                         MultipleChoice mc = new MultipleChoice();
-                        mc.setTitle(context.tBuffer.content);
+                        mc.setTitle(context.tBuffer.lexeme);
                         mc.setOptions(context.options.toArray(new String[0]));
                         mc.setDefaultIndexes(
                             context.defaultIndexes.toArray(new Integer[0]));
@@ -236,7 +273,7 @@ public class SpellParserImpl implements SpellParser{
                     if(!s.equals("")){
                         s += " ";
                     }
-                    s += ((TextToken)token).content;
+                    s += ((TextToken)token).lexeme;
                     context.options.set(context.options.size()-1, s);
                     return true;
                 }
@@ -260,30 +297,26 @@ public class SpellParserImpl implements SpellParser{
                     if(context.tBuffer == null){
                         context.tBuffer = (TextToken)token;
                     } else {
-                        context.tBuffer.content += " "+((TextToken)token).content;
+                        context.tBuffer.lexeme += " "+((TextToken)token).lexeme;
                     }
                     return true;
                 }
             };
             ///////////////////////////////////////////////
-            //构造QuizText和QuizTitle分支
+            //构造QuizTitle分支
             TagNode title_TEXT = new TagNode(Tag.TEXT);
             TagNode title_NEWLINE = new TagNode(Tag.NEWLINE);
             TagNode title_SECTION = new TagNode(Tag.SECTION);
             
             title_TEXT.addChild(title_NEWLINE);
+            title_NEWLINE.addChild(title_TEXT);
             title_NEWLINE.addChild(title_SECTION);
             
             title_TEXT.contextFn = question_TEXT.contextFn;
-            title_TEXT.failureFn = new FailureFn(){
-                public QuizElement fail(ParsingContext context) {
-                    return new QuizText(context.tBuffer.content);
-                }
-            };
-            title_NEWLINE.failureFn = title_TEXT.failureFn;
+            
             title_SECTION.failureFn = new FailureFn(){
                 public QuizElement fail(ParsingContext context) {
-                    return new QuizTitle(context.tBuffer.content);
+                    return new QuizTitle(context.tBuffer.lexeme);
                 }
             };
             /////////////////////////////////////////////////////////
