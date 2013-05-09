@@ -41,56 +41,9 @@ public class Interpretation {
     
     boolean lastTokenIsNEWLINE = false;
     private Scanner scanner;
-    private Scanner scanner_1 = new Scanner(){
-        public Token scan(){
-            Token t;
-            if((t = scan_NEWLINE())!=null){
-                return t;
-            }
-            if((t = scan_INDEX())!=null){
-                scanner = scanner_3;
-                return t;
-            }
-            scanner = scanner_2;
-            return scan_TEXT();
-        }
-    };
-    private Scanner scanner_2 = new Scanner(){
-        public Token scan(){
-            Token t;
-            if((t = scan_NEWLINE())!=null){
-                return t;
-            }
-            if((t = scan_SECTION())!=null){
-                scanner = scanner_1;
-                return t;
-            }
-            if((t = scan_INDEX())!=null){
-                scanner = scanner_3;
-                return t;
-            }
-            return scan_TEXT();
-        }
-    };
-    private Scanner scanner_3 = new Scanner(){
-        public Token scan(){
-            Token t;
-            if((t = scan_NEWLINE())!=null){
-                return t;
-            }
-            if((t = scan_OPTION())!=null){
-                return t;
-            }
-            if((t = scan_INPUT())!=null){
-                return t;
-            }
-            return scan_TEXT();
-        }
-    };
-    
+ 
     public Interpretation(CharSequence s){
         source = s;
-        scanner = scanner_1;
         Token k;
         while((k = scan())!=null){
             tokenList.add(k);
@@ -101,20 +54,6 @@ public class Interpretation {
     public Token getNextToken(){
         return iterator.hasNext() ? iterator.next() : null;
     }
-    /* 词法分析器的所有Token：TEXT,NEWLINE,SECTION,INDEX,OPTION,INPUT
-     * 
-     * 具有3个状态：
-     * 1. 生成 TEXT, NEWLINE, INDEX
-     * 2. 生成 TEXT, NEWLINE, SECTION, INDEX
-     * 3. 生成 TEXT, NEWLINE, OPTION, INPUT
-     * 
-     * 转换方案：
-     * 开始处于1
-     * 生成 TEXT 时 1->2
-     * 生成 INDEX 时 1->3 / 2->3
-     * 生成 SECTION 时 2->1
-     * 生成连续两个 NEWLINE 时 3->1 / 2->1
-     * */
     private Token scan(){
         if(index>=source.length()){
             return null;
@@ -124,17 +63,23 @@ public class Interpretation {
             peek = source.charAt(index++);
         }while(peek==' '||peek=='\t');
         
-        Token t = scanner.scan();
-        if(t.tag == Tag.NEWLINE){
-            if(lastTokenIsNEWLINE){
-                scanner = scanner_1;
-            } else {
-                lastTokenIsNEWLINE = true;
-            }
-        } else {
-            lastTokenIsNEWLINE = false;
+        Token t;
+        if((t = scan_NEWLINE())!=null){
+            return t;
         }
-        return t;
+        if((t = scan_SECTION())!=null){
+            return t;
+        }
+        if((t = scan_INDEX())!=null){
+            return t;
+        }
+        if((t = scan_OPTION())!=null){
+            return t;
+        }
+        if((t = scan_INPUT())!=null){
+            return t;
+        }
+        return scan_TEXT();
     }
     private Token scan_NEWLINE(){
         if(peek=='\n'){
@@ -144,12 +89,15 @@ public class Interpretation {
     }
     private Token scan_SECTION(){
         if(peek=='-'){
+            int lastIndex = index;
             index = locate(new Locater(){
                 public boolean pass(char c){
                     return c=='-';
                 }
             });
-            return new SectionToken();
+            SectionToken t = new SectionToken();
+            t.lexeme = source.subSequence(lastIndex-1, index).toString().trim();
+            return t;
         }
         return null;
     }
@@ -162,8 +110,11 @@ public class Interpretation {
             });
             if(source.charAt(rightBorder)==')'){
                 boolean isDefault = index!=rightBorder;
+                OptionToken ot = new OptionToken(true,isDefault);
+                ot.lexeme = 
+                    source.subSequence(index-1, rightBorder+1).toString().trim();
                 index = rightBorder + 1;
-                return new OptionToken(true,isDefault);
+                return ot;
             }
         } else if(peek=='['){
             int rightBorder = locate(new Locater(){
@@ -173,20 +124,26 @@ public class Interpretation {
             });
             if(source.charAt(rightBorder)==']'){
                 boolean isDefault = index!=rightBorder;
+                OptionToken ot = new OptionToken(false,isDefault);
+                ot.lexeme = 
+                    source.subSequence(index-1, rightBorder+1).toString().trim();
                 index = rightBorder + 1;
-                return new OptionToken(false,isDefault);
+                return ot;
             }
         }
         return null;
     }
     private Token scan_INPUT(){
         if(peek=='_'){
+            int lastIndex = index;
             index = locate(new Locater(){
                 public boolean pass(char c){
                     return c=='_';
                 }
             });
-            return new InputToken();
+            InputToken t = new InputToken();
+            t.lexeme = source.subSequence(lastIndex-1, index).toString().trim();
+            return t;
         }
         return null;
     }
@@ -198,11 +155,13 @@ public class Interpretation {
                     return Character.isDigit(c);
                 }
             });
-            if(source.charAt(l)=='.'){
-                Token it = new IndexToken();
-                it.lexeme = source.subSequence(index-1, l+1).toString();
-                index = l+1;
-                return it;
+            if(l<source.length()){
+                if(source.charAt(l)=='.'){
+                    Token it = new IndexToken();
+                    it.lexeme = source.subSequence(index-1, l+1).toString();
+                    index = l+1;
+                    return it;
+                }
             }
         }
         return null;
@@ -214,8 +173,7 @@ public class Interpretation {
                 return c!='\n';
             }
         });
-        String text = source.subSequence(index-1, l).toString();
-        text = text.trim();
+        String text = source.subSequence(index-1, l).toString().trim();
         index = l;
         return new TextToken(text);
     }
@@ -279,3 +237,71 @@ public class Interpretation {
         boolean pass(char c);
     }
 }
+    /* 词法分析器的所有Token：TEXT,NEWLINE,SECTION,INDEX,OPTION,INPUT
+     * 
+     * 具有3个状态：
+     * 1. 生成 TEXT, NEWLINE, INDEX
+     * 2. 生成 TEXT, NEWLINE, SECTION, INDEX
+     * 3. 生成 TEXT, NEWLINE, OPTION, INPUT
+     * 
+     * 转换方案：
+     * 开始处于1
+     * 生成 TEXT 时 1->2
+     * 生成 INDEX 时 1->3 / 2->3
+     * 生成 SECTION 时 2->1
+     * 生成连续两个 NEWLINE 时 3->1 / 2->1
+     * 
+     * 该方案不再使用
+     * */
+
+   //不再使用词法状态机
+    
+    
+    /*
+    private Scanner scanner_1 = new Scanner(){
+        public Token scan(){
+            Token t;
+            if((t = scan_NEWLINE())!=null){
+                return t;
+            }
+            if((t = scan_INDEX())!=null){
+                scanner = scanner_3;
+                return t;
+            }
+            scanner = scanner_2;
+            return scan_TEXT();
+        }
+    };
+    private Scanner scanner_2 = new Scanner(){
+        public Token scan(){
+            Token t;
+            if((t = scan_NEWLINE())!=null){
+                return t;
+            }
+            if((t = scan_SECTION())!=null){
+                scanner = scanner_1;
+                return t;
+            }
+            if((t = scan_INDEX())!=null){
+                scanner = scanner_3;
+                return t;
+            }
+            return scan_TEXT();
+        }
+    };
+    private Scanner scanner_3 = new Scanner(){
+        public Token scan(){
+            Token t;
+            if((t = scan_NEWLINE())!=null){
+                return t;
+            }
+            if((t = scan_OPTION())!=null){
+                return t;
+            }
+            if((t = scan_INPUT())!=null){
+                return t;
+            }
+            return scan_TEXT();
+        }
+    };
+    */
