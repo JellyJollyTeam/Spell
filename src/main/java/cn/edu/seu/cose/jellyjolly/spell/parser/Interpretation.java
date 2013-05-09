@@ -49,7 +49,6 @@ public class Interpretation {
             tokenList.add(k);
         }
         iterator = tokenList.iterator();
-        System.out.println(tokenList.size()+" tokens created");
     }
     public Token getNextToken(){
         return iterator.hasNext() ? iterator.next() : null;
